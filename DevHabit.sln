@@ -5,7 +5,7 @@ VisualStudioVersion = 17.13.35931.197 d17.13
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{1AAEA5B4-A84E-437C-8F3B-A2B9E26FEE54}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DevHabit.Api", "DevHabit.Api\DevHabit.Api.csproj", "{A5849F4A-4C17-4BA2-89FB-0B5BA6FE0162}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DevHabit.Api", "src\DevHabit.Api\DevHabit.Api.csproj", "{A5849F4A-4C17-4BA2-89FB-0B5BA6FE0162}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{0F9E3E35-05DA-4112-945D-D5E5D23C83FB}"
 	ProjectSection(SolutionItems) = preProject
