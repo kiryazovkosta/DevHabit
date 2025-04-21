@@ -1,0 +1,6 @@
+services:
+  devhabit.api:
+    image: ${DOCKER_REGISTRY-}devhabitapi
+    build:
+      context: .
+      dockerfile: DevHabit.Api/Dockerfile
