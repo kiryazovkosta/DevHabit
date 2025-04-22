@@ -9,31 +9,22 @@ on:
 env:
     DOTNET_VERSION: "9.x"
 
-# defaults:
-#     run:
-#         working-directory: DevHabit
+defaults:
+    run:
+        working-directory: DevHabit
 
 jobs:
     build:
         runs-on: ubuntu-latest
 
         steps:
-            - name: Show working directory
-              run: pwd
-
-            - name: List files in current directory
-              run: ls -l
+            - name: Checkout repository
+              uses: actions/checkout@v4
 
             - name: Setup .NET
               uses: actions/setup-dotnet@v4
               with:
                     dotnet-version: ${{ env.DOTNET_VERSION }}
-
-            - name: Checkout repository
-              uses: actions/checkout@v3
-
-            - name: List files in current directory after checkout
-              run: ls -l
 
             - name: Restore
               run: dotnet restore DevHabit.sln
