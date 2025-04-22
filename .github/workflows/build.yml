@@ -21,8 +21,14 @@ jobs:
             - name: Show working directory
               run: pwd
 
-            - name: List working directory
-              run: ls -al
+            - name: List files in current directory
+              run: ls -l
+
+            - name: Go one directory up
+              run: cd ..
+
+            - name: List files in parent directory
+              run: ls -l
 
             - name: Setup .NET
               uses: actions/setup-dotnet@v4
