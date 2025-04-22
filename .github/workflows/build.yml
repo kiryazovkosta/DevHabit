@@ -15,7 +15,7 @@ jobs:
 
         defaults:
             run:
-                working-directory: DevHabit
+                working-directory: src/DevHabit.Api
 
         steps:
             - name: Setup .NET
