@@ -9,9 +9,9 @@ on:
 env:
     DOTNET_VERSION: "9.x"
 
-defaults:
-    run:
-        working-directory: DevHabit
+# defaults:
+#     run:
+#         working-directory: DevHabit
 
 jobs:
     build:
