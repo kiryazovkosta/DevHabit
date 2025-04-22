@@ -9,11 +9,18 @@ on:
 env:
     DOTNET_VERSION: "9.x"
 
+defaults:
+    run:
+        working-directory: DevHabit
+
 jobs:
     build:
         runs-on: ubuntu-latest
 
         steps:
+            - name: Show working directory
+              run: pwd
+
             - name: Setup .NET
               uses: actions/setup-dotnet@v4
               with:
