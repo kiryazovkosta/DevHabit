@@ -1,5 +1,6 @@
 services:
   devhabit.api:
+    container_name: devhabit.api   
     image: ${DOCKER_REGISTRY-}devhabitapi
     build:
       context: .
@@ -7,3 +8,30 @@ services:
     ports:
       - 5000:8080
       - 5001:8081
+    environment:
+      # # Seq
+      # - OTEL_EXPORTER_OTLP_ENDPOINT=http://devhabit.seq:5341/ingest/otlp
+      # - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+      # Aspire Dashboard
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://devhabit.aspire-dashboard:18889
+      - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+
+  devhabit.seq:
+    container_name: devhabit.seq
+    image: datalust/seq:latest
+    environment:
+      ACCEPT_EULA: "Y"
+    volumes:
+      - ./.containers/seq_data:/data
+    ports:
+      - 8080:80
+      - 5341:5341
+
+  devhabit.aspire-dashboard:
+    container_name: devhabit.aspire-dashboard
+    image: mcr.microsoft.com/dotnet/aspire-dashboard:9.0
+    environment:
+      DOTNET_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS: true
+    ports:
+      - 18888:18888
+
