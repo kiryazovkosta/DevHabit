@@ -406,3 +406,4 @@ FodyWeavers.xsd
 .containers
 docker-compose.yml
 docker-compose.override.yml
+launchSettings.json
