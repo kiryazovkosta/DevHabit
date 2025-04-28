@@ -52,11 +52,11 @@ public sealed class Habit
     /// <summary>
     /// Gets or sets the UTC timestamp of the last update made to the habit.
     /// </summary>
-    public DateTime UpdatedAtUtc { get; set; }
+    public DateTime? UpdatedAtUtc { get; set; }
     /// <summary>
     /// When the last completed task id added to the habit's milestone
     /// </summary>
-    public DateTime LastCompletedAtUtc { get; set; }
+    public DateTime? LastCompletedAtUtc { get; set; }
 }
 
 public enum HabitType

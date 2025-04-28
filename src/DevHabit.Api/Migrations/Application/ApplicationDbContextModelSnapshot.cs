@@ -47,7 +47,7 @@ namespace DevHabit.Api.Migrations.Application
                         .HasColumnType("boolean")
                         .HasColumnName("is_archived");
 
-                    b.Property<DateTime>("LastCompletedAtUtc")
+                    b.Property<DateTime?>("LastCompletedAtUtc")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("last_completed_at_utc");
 
@@ -65,7 +65,7 @@ namespace DevHabit.Api.Migrations.Application
                         .HasColumnType("integer")
                         .HasColumnName("type");
 
-                    b.Property<DateTime>("UpdatedAtUtc")
+                    b.Property<DateTime?>("UpdatedAtUtc")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at_utc");
 
