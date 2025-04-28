@@ -15,6 +15,20 @@ services:
       # Aspire Dashboard
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://devhabit.aspire-dashboard:18889
       - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+    depends_on:
+      - devhabit.postgres
+
+  devhabit.postgres:
+    container_name: devhabit.postgres
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: devhabit
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - 5432:5432
+    volumes:
+      - ./.containers/postgres_data:/var/lib/postgresql/data
 
   # devhabit.seq:
   #   container_name: devhabit.seq
