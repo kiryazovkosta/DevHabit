@@ -1,4 +1,6 @@
-﻿namespace DevHabit.Api.Controllers;
+﻿using DevHabit.Api.DTOs.Habits;
+
+namespace DevHabit.Api.Controllers;
 
 using Database;
 using Entities;
@@ -7,12 +9,35 @@ using Microsoft.EntityFrameworkCore;
 
 [ApiController]
 [Route("api/habits")]
-internal sealed class HabitsController(ApplicationDbContext dbContext) : ControllerBase
+public sealed class HabitsController(ApplicationDbContext dbContext) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> GetHabits()
+    public async Task<ActionResult<HabitCollectionDto>> GetHabits()
     {
-        List<Habit> habits = await dbContext.Habits.ToListAsync();
-        return Ok(habits);
+        List<HabitDto> habits = await dbContext
+            .Habits
+            .Select(h => HabitDto.CreateFrom(h))
+            .ToListAsync();
+        var dto = new HabitCollectionDto
+        {
+            Data = habits
+        };
+        return Ok(dto);
+    }
+
+    [HttpGet("{id}")]
+    public async Task<ActionResult<HabitDto>> GetHabit(string id)
+    {
+        HabitDto habit = await dbContext
+            .Habits
+            .Where(h => h.Id == id)
+            .Select(h => HabitDto.CreateFrom(h))
+            .FirstOrDefaultAsync();
+        if (habit is null)
+        {
+            return NotFound();
+        }
+        
+        return Ok(habit);
     }
 }
