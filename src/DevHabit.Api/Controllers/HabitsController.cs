@@ -1,4 +1,5 @@
 ﻿using DevHabit.Api.Entities;
+using Microsoft.AspNetCore.JsonPatch;
 
 namespace DevHabit.Api.Controllers;
 
@@ -61,6 +62,30 @@ public sealed class HabitsController(ApplicationDbContext dbContext) : Controlle
         }
         
         habit.UpdateFromDto(updateHabitDto);
+        await dbContext.SaveChangesAsync();
+        return NoContent();
+    }
+
+    [HttpPatch("{id}")]
+    public async Task<ActionResult> PatchHabit(
+        string id, 
+        [FromBody] JsonPatchDocument<HabitDto> patchDocument)
+    {
+        Habit habit = await dbContext.Habits.FirstOrDefaultAsync(h => h.Id == id);
+        if (habit is null)
+        {
+            return NotFound("Habit not found");
+        }
+
+        HabitDto habitDto = habit.ToDto();
+        patchDocument.ApplyTo(habitDto, ModelState);
+
+        if (!TryValidateModel(habitDto))
+        {
+            return ValidationProblem(ModelState);
+        }
+        
+        habit.PatchFromDto(habitDto);
         await dbContext.SaveChangesAsync();
         return NoContent();
     }
