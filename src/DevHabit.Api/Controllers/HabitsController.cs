@@ -50,4 +50,18 @@ public sealed class HabitsController(ApplicationDbContext dbContext) : Controlle
         HabitDto habitDto = habit.ToDto();
         return CreatedAtAction(nameof(GetHabit), new { id = habit.Id }, habitDto);
     }
+
+    [HttpPut("{id}")]
+    public async Task<ActionResult> UpdateHabit(string id, [FromBody]UpdateHabitDto updateHabitDto)
+    {
+        Habit habit = await dbContext.Habits.FirstOrDefaultAsync(h => h.Id == id);
+        if (habit is null)
+        {
+            return NotFound("Habit not found");
+        }
+        
+        habit.UpdateFromDto(updateHabitDto);
+        await dbContext.SaveChangesAsync();
+        return NoContent();
+    }
 }

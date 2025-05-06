@@ -31,7 +31,9 @@ internal static class HabitMappings
                     Current = createHabitDto.Milestone.Current,
                     Target = createHabitDto.Milestone.Target,
                 } 
-                : null
+                : null, 
+            CreatedAtUtc = DateTime.UtcNow,
+            
         };
         return habit;
     }
@@ -67,5 +69,35 @@ internal static class HabitMappings
             UpdatedAtUtc = habit.UpdatedAtUtc,
             LastCompletedAtUtc = habit.LastCompletedAtUtc
         };
+    }
+
+    public static void UpdateFromDto(this Habit habit, UpdateHabitDto dto)
+    {
+        // Basic properties
+        habit.Name = dto.Name;
+        habit.Description = dto.Description;
+        habit.Type = dto.Type;
+        habit.EndDate = dto.EndDate;
+
+        // Update frequency ( Create new because record is immutable)
+        habit.Frequency = new Frequency()
+        {
+            Type = dto.Frequency.Type,
+            TimesPerPeriod = dto.Frequency.TimesPerPeriod,
+        };
+
+        habit.Target = new Target()
+        {
+            Unit = dto.Target.Unit,
+            Value = dto.Target.Value
+        };
+
+        if (dto.Milestone is not null)
+        {
+            habit.Milestone ??= new Milestone();
+            habit.Milestone.Target = dto.Milestone.Target;
+        }
+        
+        habit.UpdatedAtUtc = DateTime.UtcNow;
     }
 }
