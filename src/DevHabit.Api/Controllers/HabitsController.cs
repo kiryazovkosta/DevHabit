@@ -55,7 +55,7 @@ public sealed class HabitsController(ApplicationDbContext dbContext) : Controlle
     [HttpPut("{id}")]
     public async Task<ActionResult> UpdateHabit(string id, [FromBody]UpdateHabitDto updateHabitDto)
     {
-        Habit habit = await dbContext.Habits.FirstOrDefaultAsync(h => h.Id == id);
+        Habit? habit = await dbContext.Habits.FirstOrDefaultAsync(h => h.Id == id);
         if (habit is null)
         {
             return NotFound("Habit not found");
@@ -71,7 +71,7 @@ public sealed class HabitsController(ApplicationDbContext dbContext) : Controlle
         string id, 
         [FromBody] JsonPatchDocument<HabitDto> patchDocument)
     {
-        Habit habit = await dbContext.Habits.FirstOrDefaultAsync(h => h.Id == id);
+        Habit? habit = await dbContext.Habits.FirstOrDefaultAsync(h => h.Id == id);
         if (habit is null)
         {
             return NotFound("Habit not found");
@@ -86,6 +86,21 @@ public sealed class HabitsController(ApplicationDbContext dbContext) : Controlle
         }
         
         habit.PatchFromDto(habitDto);
+        await dbContext.SaveChangesAsync();
+        return NoContent();
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<ActionResult> DeleteHabit(string id)
+    {
+        Habit? habit = await dbContext.Habits.FirstOrDefaultAsync(h => h.Id == id);
+        if (habit is null)
+        {
+            //return StatusCode(StatusCodes.Status410Gone); if soft delete is implemented
+            return NotFound("Habit not found");
+        }
+        
+        dbContext.Habits.Remove(habit);
         await dbContext.SaveChangesAsync();
         return NoContent();
     }
