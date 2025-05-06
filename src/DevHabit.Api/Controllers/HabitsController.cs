@@ -1,9 +1,9 @@
-﻿using DevHabit.Api.DTOs.Habits;
+﻿using DevHabit.Api.Entities;
 
 namespace DevHabit.Api.Controllers;
 
 using Database;
-using Entities;
+using DTOs.Habits;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,7 +16,7 @@ public sealed class HabitsController(ApplicationDbContext dbContext) : Controlle
     {
         List<HabitDto> habits = await dbContext
             .Habits
-            .Select(h => HabitDto.CreateFrom(h))
+            .Select(HabitQueries.ProjectToDto())
             .ToListAsync();
         var dto = new HabitCollectionDto
         {
@@ -31,7 +31,7 @@ public sealed class HabitsController(ApplicationDbContext dbContext) : Controlle
         HabitDto habit = await dbContext
             .Habits
             .Where(h => h.Id == id)
-            .Select(h => HabitDto.CreateFrom(h))
+            .Select(HabitQueries.ProjectToDto())
             .FirstOrDefaultAsync();
         if (habit is null)
         {
@@ -39,5 +39,15 @@ public sealed class HabitsController(ApplicationDbContext dbContext) : Controlle
         }
         
         return Ok(habit);
+    }
+
+    [HttpPost]
+    public async Task<ActionResult<HabitDto>> CreateHabit(CreateHabitDto createHabitDto)
+    {
+        Habit habit = createHabitDto.ToEntity();
+        await dbContext.Habits.AddAsync(habit);
+        await dbContext.SaveChangesAsync();
+        HabitDto habitDto = habit.ToDto();
+        return CreatedAtAction(nameof(GetHabit), new { id = habit.Id }, habitDto);
     }
 }
