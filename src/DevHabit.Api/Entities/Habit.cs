@@ -57,6 +57,14 @@ public sealed class Habit
     /// When the last completed task id added to the habit's milestone
     /// </summary>
     public DateTime? LastCompletedAtUtc { get; set; }
+    /// <summary>
+    /// Collection of associated tags
+    /// </summary>
+    public List<HabitTag> HabitTags { get; set; }
+    /// <summary>
+    /// Skip navigation property to the habit's tags
+    /// </summary>
+    public List<Tag> Tags { get; set; }
 }
 
 public enum HabitType
