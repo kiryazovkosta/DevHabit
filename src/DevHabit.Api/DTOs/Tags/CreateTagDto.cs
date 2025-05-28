@@ -1,3 +1,5 @@
+using DevHabit.Api.Common;
+
 namespace DevHabit.Api.DTOs.Tags;
 
 public sealed class CreateTagDto

@@ -40,7 +40,7 @@ public sealed class Habit
     /// <summary>
     /// End date of the habit
     /// </summary>
-    public DateTime? EndDate { get; set; }
+    public DateOnly? EndDate { get; set; }
     /// <summary>
     /// Milestone
     /// </summary>
