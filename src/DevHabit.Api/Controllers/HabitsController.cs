@@ -32,7 +32,7 @@ public sealed class HabitsController(ApplicationDbContext dbContext) : Controlle
         HabitWithTagsDto? habit = await dbContext
             .Habits
             .Where(h => h.Id == id)
-            .Select(HabitQueries.ProjectToTagsDto())
+            .Select(HabitQueries.ProjectToDtoWithTagsDto())
             .FirstOrDefaultAsync();
         if (habit is null)
         {
