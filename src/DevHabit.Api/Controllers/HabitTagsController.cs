@@ -10,8 +10,6 @@ namespace DevHabit.Api.Controllers;
 [Route("api/habits/{habitId}/tags")]
 public sealed class HabitTagsController(ApplicationDbContext dbContext) : ControllerBase
 {
-        
-    // habits/:id/tags/:tagId
     [HttpPut]
     public async Task<ActionResult> AddTagToHabit(string habitId, UpsertHabitTagsDto upsertHabitTagsDto )
     {
@@ -33,24 +31,42 @@ public sealed class HabitTagsController(ApplicationDbContext dbContext) : Contro
         }
         
         var currentTagIds = habit.HabitTags.Select(ht => ht.TagId).ToHashSet();
-        if (currentTagIds.IsSubsetOf(upsertHabitTagsDto.TagIds))
+        if (currentTagIds.IsSupersetOf(upsertHabitTagsDto.TagIds))
         {
             return BadRequest("One or more tag IDs is invalid!");
         }
 
         habit.HabitTags.RemoveAll(ht => !upsertHabitTagsDto.TagIds.Contains(ht.TagId));
         
-        string[] tagIdsToAdd = upsertHabitTagsDto.TagIds.Except(currentTagIds).ToArray();
+        string[] tagIdsToAdd = [.. upsertHabitTagsDto.TagIds.Except(currentTagIds)];
         
-        
-        
-        return Ok();
+        habit.HabitTags.AddRange(
+            tagIdsToAdd.Select(
+                tagId => new HabitTag
+                {
+                    HabitId = habitId,
+                    TagId = tagId,
+                    CreatedAtUtc = DateTime.UtcNow
+                })
+        );
+
+        await dbContext.SaveChangesAsync();
+        return NoContent();
     }
     
-    // habits/:id/tags/:tagId
+
     [HttpDelete("{tagId}")]
-    public ActionResult DeleteHabitTag(string habitId, string tagId )
+    public async Task<ActionResult> DeleteHabitTag(string habitId, string tagId )
     {
-        return Ok(new { id, tagId });
+        HabitTag? habitTag = await dbContext.HabitTags
+            .SingleOrDefaultAsync(ht => ht.HabitId == habitId && ht.TagId == tagId);
+        if (habitTag is null)
+        {
+            return NotFound("Habit tag not found");
+        }
+        
+        dbContext.HabitTags.Remove(habitTag);
+        await dbContext.SaveChangesAsync();
+        return NoContent();
     }
 }
