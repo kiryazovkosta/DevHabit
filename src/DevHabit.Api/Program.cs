@@ -1,4 +1,5 @@
 using DevHabit.Api.Extensions;
+using DevHabit.Api.Middleware;
 using FluentValidation;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -10,7 +11,18 @@ builder.Services.AddControllers(options =>
     .AddNewtonsoftJson()
     .AddXmlDataContractSerializerFormatters();
 
-builder.Services.AddValidatorsFromAssemblyContaining<Program>(includeInternalTypes: true);
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+
+builder.Services.AddProblemDetails(options =>
+{
+    options.CustomizeProblemDetails = context =>
+    {
+        context.ProblemDetails.Extensions.TryAdd("requestId", context.HttpContext.TraceIdentifier);
+    };
+});
+
+builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 builder.Services.AddOpenApi();
 
@@ -27,6 +39,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseExceptionHandler();
 
 app.MapControllers();
 

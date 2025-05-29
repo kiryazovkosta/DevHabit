@@ -8,6 +8,7 @@ using FluentValidation.Results;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
+using DevHabit.Api.DTOs.Habits;
 
 [Route("api/tags")]
 [ApiController]
@@ -47,17 +48,10 @@ public sealed class TagsController(ApplicationDbContext dbContext) : ControllerB
     [HttpPost]
     public async Task<ActionResult<TagDto>> CreateTag(
         CreateTagDto createTagDto, 
-        IValidator<CreateTagDto> validator,
-        ProblemDetailsFactory problemDetailsFactory)
+        IValidator<CreateTagDto> validator)
     {
-        ValidationResult validationResult = await validator.ValidateAsync(createTagDto);
-        if (!validationResult.IsValid)
-        {
-            ProblemDetails problem = problemDetailsFactory.CreateProblemDetails(HttpContext, StatusCodes.Status400BadRequest);
-            problem.Extensions.Add("errors", validationResult.ToDictionary());
-            return BadRequest(problem);
-        }
-        
+        await validator.ValidateAndThrowAsync(createTagDto);
+
         Tag tag = createTagDto.ToEntity();
         if (await dbContext.Tags.AnyAsync(t => t.Name == createTagDto.Name))
         {
@@ -65,8 +59,8 @@ public sealed class TagsController(ApplicationDbContext dbContext) : ControllerB
                 detail:$"Tag with name {tag.Name} already exists",
                 statusCode: StatusCodes.Status409Conflict);
         }
-        
-        await dbContext.Tags.AddAsync(tag);
+
+        dbContext.Tags.Add(tag);
         await dbContext.SaveChangesAsync();
         TagDto dto = tag.ToDto();
         return CreatedAtAction(nameof(GetTag), new { id = tag.Id }, dto);
