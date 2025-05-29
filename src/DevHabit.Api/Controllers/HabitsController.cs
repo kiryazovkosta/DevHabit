@@ -13,20 +13,17 @@ using Microsoft.AspNetCore.JsonPatch;
 public sealed class HabitsController(ApplicationDbContext dbContext) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<HabitCollectionDto>> GetHabits(
-        [FromQuery(Name = "q")] string? search,
-        HabitType? type,
-        HabitStatus? status)
+    public async Task<ActionResult<HabitCollectionDto>> GetHabits([FromQuery] HabitsQueryParameters query)
     {
-        search ??= search?.Trim().ToLower();
+        query.Search ??= query.Search?.Trim().ToLower();
         
         List<HabitDto> habits = await dbContext.Habits
             .Where(h =>
-                search == null ||
-                EF.Functions.Like(h.Name, $"%{search}%") ||
-                h.Description != null && EF.Functions.Like(h.Description, $"%{search}%"))
-            .Where(h => type == null || h.Type == type)
-            .Where(h => status == null || h.Status == status)
+                query.Search == null ||
+                EF.Functions.Like(h.Name, $"%{query.Search}%") ||
+                h.Description != null && EF.Functions.Like(h.Description, $"%{query.Search}%"))
+            .Where(h => query.Type == null || h.Type == query.Type)
+            .Where(h => query.Status == null || h.Status == query.Status)
             .Select(HabitQueries.ProjectToDto())
             .ToListAsync();
         var dto = new HabitCollectionDto
