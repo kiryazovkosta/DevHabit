@@ -2,11 +2,6 @@ using DevHabit.Api.Entities;
 
 namespace DevHabit.Api.DTOs.Habits;
 
-public sealed class HabitCollectionDto
-{
-    public List<HabitDto> Data { get; init; }
-}
-
 public sealed record HabitDto
 {
     public required string Id { get; init; }

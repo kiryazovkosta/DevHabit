@@ -1,4 +1,5 @@
-﻿using DevHabit.Api.Extensions;
+﻿using DevHabit.Api.DTOs.Common;
+using DevHabit.Api.Extensions;
 using DevHabit.Api.Services.Sorting;
 
 namespace DevHabit.Api.Controllers;
@@ -10,14 +11,14 @@ using Microsoft.EntityFrameworkCore;
 using Entities;
 using FluentValidation;
 using Microsoft.AspNetCore.JsonPatch;
-using System.Linq.Dynamic.Core;
+//using System.Linq.Dynamic.Core;
 
 [ApiController]
 [Route("api/habits")]
 public sealed class HabitsController(ApplicationDbContext dbContext) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<HabitCollectionDto>> GetHabits(
+    public async Task<ActionResult<PaginationResult<HabitDto>>> GetHabits(
         [FromQuery] HabitsQueryParameters query,
         SortMappingProvider sortMappingProvider)
     {
@@ -31,7 +32,7 @@ public sealed class HabitsController(ApplicationDbContext dbContext) : Controlle
         query.Search ??= query.Search?.Trim().ToLower();
         SortMapping[] sortMappings = sortMappingProvider.GetMappings<HabitDto, Habit>();
 
-        List<HabitDto> habits = await dbContext.Habits
+        IQueryable<HabitDto> habitQuery = dbContext.Habits
             .Where(h =>
                 query.Search == null ||
                 EF.Functions.Like(h.Name, $"%{query.Search}%") ||
@@ -39,13 +40,10 @@ public sealed class HabitsController(ApplicationDbContext dbContext) : Controlle
             .Where(h => query.Type == null || h.Type == query.Type)
             .Where(h => query.Status == null || h.Status == query.Status)
             .ApplySort(query.Sort, sortMappings)
-            .Select(HabitQueries.ProjectToDto())
-            .ToListAsync();
-        var dto = new HabitCollectionDto
-        {
-            Data = habits
-        };
-        return Ok(dto);
+            .Select(HabitQueries.ProjectToDto());
+        
+        var paginationResult = await PaginationResult<HabitDto>.CreateAsync(habitQuery, query.Page, query.PageSize);
+        return Ok(paginationResult);
     }
 
     [HttpGet("{id}")]
