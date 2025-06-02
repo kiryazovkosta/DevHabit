@@ -2,17 +2,20 @@ using DevHabit.Api.DTOs.Habits;
 using DevHabit.Api.Entities;
 using DevHabit.Api.Extensions;
 using DevHabit.Api.Middleware;
+using DevHabit.Api.Services;
 using DevHabit.Api.Services.Sorting;
 using FluentValidation;
+using Newtonsoft.Json.Serialization;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers(options =>
-    {
-        options.ReturnHttpNotAcceptable = true;
-    })
-    .AddNewtonsoftJson()
-    .AddXmlDataContractSerializerFormatters();
+{
+    options.ReturnHttpNotAcceptable = true;
+})
+.AddNewtonsoftJson(options => 
+    options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver())
+.AddXmlDataContractSerializerFormatters();
 
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
@@ -36,6 +39,7 @@ builder.AddOpenTelemetry();
 builder.Services.AddTransient<SortMappingProvider>();
 builder.Services.AddSingleton<ISortMappingDefinition, SortMappingDefinition<HabitDto, Habit>>(_ =>
     HabitMappings.SortMapping);
+builder.Services.AddTransient<DataShapingService>();
 
 WebApplication app = builder.Build();
 
