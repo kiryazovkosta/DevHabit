@@ -1,7 +1,7 @@
-﻿using System.Linq.Dynamic.Core;
-using DevHabit.Api.Services.Sorting;
+﻿namespace DevHabit.Api.Extensions;
 
-namespace DevHabit.Api.Extensions;
+using System.Linq.Dynamic.Core;
+using Services.Sorting;
 
 internal static class QueryableExtensions
 {
