@@ -1,4 +1,5 @@
-﻿namespace DevHabit.Api.Extensions;
+﻿
+namespace DevHabit.Api.Extensions;
 
 using Common;
 using Database;
@@ -97,6 +98,9 @@ public static class WebApplicationBuilderExtensions
         builder.Services.AddSingleton<ISortMappingDefinition, SortMappingDefinition<HabitDto, Habit>>(_ => HabitMappings.SortMapping);
 
         builder.Services.AddTransient<DataShapingService>();
+
+        builder.Services.AddHttpContextAccessor();
+        builder.Services.AddTransient<LinkService>();
 
         return builder;
     }

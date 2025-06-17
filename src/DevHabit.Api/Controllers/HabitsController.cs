@@ -1,25 +1,22 @@
-﻿using System.Dynamic;
-using DevHabit.Api.DTOs.Common;
-using DevHabit.Api.Extensions;
-using DevHabit.Api.Services;
-using DevHabit.Api.Services.Sorting;
+﻿namespace DevHabit.Api.Controllers;
 
-namespace DevHabit.Api.Controllers;
-
+using System.Dynamic;
 using Database;
+using DevHabit.Api.DTOs.Common;
 using DTOs.Habits;
 using Entities;
+using Extensions;
 using FluentValidation;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
-
-//using System.Linq.Dynamic.Core;
+using Services;
+using Services.Sorting;
 
 [ApiController]
 [Route("api/habits")]
-public sealed class HabitsController(ApplicationDbContext dbContext) : ControllerBase
+public sealed class HabitsController(ApplicationDbContext dbContext, LinkService linkService) : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> GetHabits(
@@ -53,8 +50,6 @@ public sealed class HabitsController(ApplicationDbContext dbContext) : Controlle
             .Where(h => query.Status == null || h.Status == query.Status)
             .ApplySort(query.Sort, sortMappings)
             .Select(HabitQueries.ProjectToDto());
-        
-        //var paginationResult = await PaginationResult<HabitDto>.CreateAsync(habitQuery, query.Page, query.PageSize);
 
         int totalCount = await habitQuery.CountAsync();
         
@@ -65,12 +60,19 @@ public sealed class HabitsController(ApplicationDbContext dbContext) : Controlle
 
         var paginationResult = new PaginationResult<ExpandoObject>
         {
-            Items = dataShapingService.ShapeCollectionData(habits, query.Fields),
+            Items = dataShapingService.ShapeCollectionData(
+                habits, 
+                query.Fields, 
+                h => CreateLinksForHabit(h.Id, query.Fields)),
             Page = query.Page,
             PageSize = query.PageSize,
-            TotalCount = totalCount
+            TotalCount = totalCount,
+            Links = CreateLinksForHabits(
+                query, 
+                query.Page > 1, 
+                query.Page < (int)Math.Ceiling(totalCount / (double)query.PageSize))
         };
-        
+
         return Ok(paginationResult);
     }
 
@@ -98,6 +100,7 @@ public sealed class HabitsController(ApplicationDbContext dbContext) : Controlle
         }
 
         ExpandoObject shapedHabitDto =  dataShapingService.ShapeData(habit, fields);
+        shapedHabitDto.TryAdd("links", CreateLinksForHabit(id, fields));
         return Ok(shapedHabitDto);
     }
 
@@ -112,6 +115,7 @@ public sealed class HabitsController(ApplicationDbContext dbContext) : Controlle
         await dbContext.Habits.AddAsync(habit);
         await dbContext.SaveChangesAsync();
         HabitDto habitDto = habit.ToDto();
+        habitDto.Links = CreateLinksForHabit(habit.Id, null);
         return CreatedAtAction(nameof(GetHabit), new { id = habit.Id }, habitDto);
     }
 
@@ -159,12 +163,76 @@ public sealed class HabitsController(ApplicationDbContext dbContext) : Controlle
         Habit? habit = await dbContext.Habits.FirstOrDefaultAsync(h => h.Id == id);
         if (habit is null)
         {
-            //return StatusCode(StatusCodes.Status410Gone); if soft delete is implemented
             return NotFound("Habit not found");
         }
         
         dbContext.Habits.Remove(habit);
         await dbContext.SaveChangesAsync();
         return NoContent();
+    }
+
+    private List<LinkDto> CreateLinksForHabit(string id, string? fields)
+    {
+        List<LinkDto> links =
+        [
+            linkService.Create(nameof(GetHabit), "self", HttpMethods.Get, new { id, fields } ),
+            linkService.Create(nameof(UpdateHabit), "update", HttpMethods.Put, new { id } ),
+            linkService.Create(nameof(PatchHabit), "partial-update", HttpMethods.Patch, new { id } ),
+            linkService.Create(nameof(DeleteHabit), "delete", HttpMethods.Delete, new { id } ),
+            linkService.Create(nameof(HabitTagsController.AddTagToHabit), "upsert-tags", HttpMethods.Put, new { habitId = id }, HabitTagsController.Name)
+        ];
+        
+        return links;
+    }
+
+    private List<LinkDto> CreateLinksForHabits(
+        HabitsQueryParameters parameters,
+        bool hasPreviousPage,
+        bool hasNextPage)
+    {
+        List<LinkDto> links = 
+        [
+            linkService.Create(nameof(GetHabits), "self", HttpMethods.Get, new
+            {
+                page = parameters.Page,
+                pageSize = parameters.PageSize,
+                fields = parameters.Fields,
+                q = parameters.Search,
+                sort = parameters.Sort,
+                type = parameters.Type,
+                status = parameters.Status
+            }),
+            linkService.Create(nameof(CreateHabit), "create", HttpMethods.Post)
+        ];
+
+        if (hasPreviousPage)
+        {
+            links.Add(linkService.Create(nameof(GetHabits), "previous-page", HttpMethods.Get, new
+            {
+                page = parameters.Page - 1,
+                pageSize = parameters.PageSize,
+                fields = parameters.Fields,
+                q = parameters.Search,
+                sort = parameters.Sort,
+                type = parameters.Type,
+                status = parameters.Status
+            }));
+        }
+
+        if (hasNextPage)
+        {
+            links.Add(linkService.Create(nameof(GetHabits), "next-page", HttpMethods.Get, new
+            {
+                page = parameters.Page + 1,
+                pageSize = parameters.PageSize,
+                fields = parameters.Fields,
+                q = parameters.Search,
+                sort = parameters.Sort,
+                type = parameters.Type,
+                status = parameters.Status
+            }));
+        }
+
+        return links;
     }
 }
