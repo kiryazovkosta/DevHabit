@@ -1,4 +1,5 @@
-﻿
+﻿using Newtonsoft.Json;
+
 namespace DevHabit.Api.Extensions;
 
 using Common;
@@ -17,6 +18,9 @@ using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using DevHabit.Api.DTOs.Common;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Formatters;
 
 public static class WebApplicationBuilderExtensions
 {
@@ -28,8 +32,19 @@ public static class WebApplicationBuilderExtensions
                 options.ReturnHttpNotAcceptable = true;
             })
             .AddNewtonsoftJson(options =>
-                options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver())
+            {
+                options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+                options.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
+            })
             .AddXmlDataContractSerializerFormatters();
+
+        builder.Services.Configure<MvcOptions>(options =>
+        {
+            NewtonsoftJsonOutputFormatter outputFormatter = options.OutputFormatters
+                .OfType<NewtonsoftJsonOutputFormatter>()
+                .First();
+            outputFormatter.SupportedMediaTypes.Add(CustomMediaTypeNames.Application.HateoasJson);
+        });
 
         builder.Services.AddOpenApi();
 

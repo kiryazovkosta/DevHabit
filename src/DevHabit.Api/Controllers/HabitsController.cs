@@ -9,7 +9,6 @@ using Extensions;
 using FluentValidation;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Services;
 using Services.Sorting;
@@ -58,20 +57,26 @@ public sealed class HabitsController(ApplicationDbContext dbContext, LinkService
             .Take(query.PageSize)
             .ToListAsync();
 
+        bool includeLinks = query.Accept == CustomMediaTypeNames.Application.HateoasJson;
+
         var paginationResult = new PaginationResult<ExpandoObject>
         {
             Items = dataShapingService.ShapeCollectionData(
                 habits, 
-                query.Fields, 
-                h => CreateLinksForHabit(h.Id, query.Fields)),
+                query.Fields,
+                includeLinks ? h => CreateLinksForHabit(h.Id, query.Fields) : null),
             Page = query.Page,
             PageSize = query.PageSize,
             TotalCount = totalCount,
-            Links = CreateLinksForHabits(
-                query, 
-                query.Page > 1, 
-                query.Page < (int)Math.Ceiling(totalCount / (double)query.PageSize))
+            
         };
+        if (includeLinks)
+        {
+            paginationResult.Links = CreateLinksForHabits(
+                query,
+                paginationResult.HasPreviousPage,
+                paginationResult.HasNextPage);
+        }
 
         return Ok(paginationResult);
     }
@@ -80,6 +85,7 @@ public sealed class HabitsController(ApplicationDbContext dbContext, LinkService
     public async Task<IActionResult> GetHabit(
         string id, 
         string? fields,
+        [FromHeader(Name = "Accept")] string? accept,
         DataShapingService dataShapingService)
     {
         if (!dataShapingService.Validate<HabitWithTagsDto>(fields))
@@ -100,7 +106,11 @@ public sealed class HabitsController(ApplicationDbContext dbContext, LinkService
         }
 
         ExpandoObject shapedHabitDto =  dataShapingService.ShapeData(habit, fields);
-        shapedHabitDto.TryAdd("links", CreateLinksForHabit(id, fields));
+        if (accept == CustomMediaTypeNames.Application.HateoasJson)
+        {
+            shapedHabitDto.TryAdd("links", CreateLinksForHabit(id, fields));
+        }
+
         return Ok(shapedHabitDto);
     }
 
