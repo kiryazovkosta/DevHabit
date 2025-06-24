@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.AspNetCore.Identity;
+using Newtonsoft.Json;
 
 namespace DevHabit.Api.Extensions;
 
@@ -77,6 +78,14 @@ public static class WebApplicationBuilderExtensions
                     opt => opt.MigrationsHistoryTable(HistoryRepository.DefaultTableName, SchemaConstants.Application))
                 .UseSnakeCaseNamingConvention());
 
+        string identityConnectionString = builder.Configuration.GetConnectionString(GlobalConstants.IdentityDbConnectionName) ?? string.Empty;
+        builder.Services.AddDbContext<ApplicationIdentityDbContext>(options =>
+            options
+                .UseNpgsql(
+                    identityConnectionString,
+                    opt => opt.MigrationsHistoryTable(HistoryRepository.DefaultTableName, SchemaConstants.Identity))
+                .UseSnakeCaseNamingConvention());
+
         return builder;
     }
 
@@ -116,6 +125,15 @@ public static class WebApplicationBuilderExtensions
 
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddTransient<LinkService>();
+
+        return builder;
+    }
+
+    public static WebApplicationBuilder AddAuthenticationServices(this WebApplicationBuilder builder)
+    {
+        builder.Services
+            .AddIdentity<IdentityUser, IdentityRole>()
+            .AddEntityFrameworkStores<ApplicationIdentityDbContext>();
 
         return builder;
     }

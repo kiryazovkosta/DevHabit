@@ -1,9 +1,11 @@
-﻿namespace DevHabit.Api.DTOs.Habits;
+﻿using DevHabit.Api.DTOs.Common;
+
+namespace DevHabit.Api.DTOs.Habits;
 
 using Microsoft.AspNetCore.Mvc;
 using Entities;
 
-public sealed class HabitsQueryParameters
+public sealed record HabitsQueryParameters : AcceptHeaderDto
 {
     [FromQuery(Name = "q")]
     public string? Search { get; set; }
@@ -13,6 +15,4 @@ public sealed class HabitsQueryParameters
     public string? Fields { get; init; }
     public int Page { get; set; } = 1;
     public int PageSize { get; set; } = 10;
-    [FromHeader(Name = "Accept")]
-    public string? Accept { get; init; }
 }

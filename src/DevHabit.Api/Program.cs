@@ -6,7 +6,8 @@ builder
     .AddErrorHandling()
     .AddDatabase()
     .AddOpenTelemetry()
-    .AddApplicationServices();
+    .AddApplicationServices()
+    .AddAuthenticationServices();
 
 WebApplication app = builder.Build();
 if (app.Environment.IsDevelopment())
